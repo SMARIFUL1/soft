@@ -1,5 +1,6 @@
 from tkinter import *
 from employees import employee_form
+from supplier import supplier_form
 
 ## FunctionalityPart
 
@@ -47,7 +48,8 @@ employee_btn.pack(fill=X)
 ## supplier_button
 supp_icon = PhotoImage(file='supplier.png', height=40, width=40, )
 supplier_btn = Button(leftframe, image=supp_icon, compound=LEFT,
-                      text=' Suppliers', font=('times new roman', 20, 'bold'), fg='black', anchor=W, padx=5)
+                      text=' Suppliers', font=('times new roman', 20, 'bold'), fg='black', anchor=W, padx=5,
+                      command=lambda: supplier_form(window))
 supplier_btn.pack(fill=X)
 
 ## Category_button
