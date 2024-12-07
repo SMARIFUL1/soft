@@ -1,8 +1,8 @@
 from tkinter import *
 from employees import employee_form
 from supplier import supplier_form
+from category import category_form
 
-## FunctionalityPart
 
 #GUI part
 window = Tk()
@@ -55,7 +55,8 @@ supplier_btn.pack(fill=X)
 ## Category_button
 cat_icon = PhotoImage(file='product.png', height=40, width=40, )
 category_btn = Button(leftframe, image=cat_icon, compound=LEFT,
-                      text=' Category', font=('times new roman', 20, 'bold'), fg='black', anchor=W, padx=5)
+                      text=' Category', font=('times new roman', 20, 'bold'), fg='black', anchor=W, padx=5,
+                      command=lambda :category_form(window))
 category_btn.pack(fill=X)
 
 ## product_button

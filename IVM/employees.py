@@ -131,7 +131,6 @@ def update_employee(empid, name, email, gender, dob, employment_type, education,
             cursor.execute('SELECT * FROM employee_data where empid =%s', (empid,))
             current_data = cursor.fetchone()
             current_data = current_data[1:]
-            print(current_data)
             address=address.strip()
 
             new_data = (name, email, gender, dob, employment_type, education, work_shift, address, contact, doj,
@@ -140,7 +139,6 @@ def update_employee(empid, name, email, gender, dob, employment_type, education,
             if current_data==new_data:
                 messagebox.showinfo('Info', 'No changes happened')
                 return
-
 
             cursor.execute('UPDATE employee_data SET name=%s, email=%s, gender=%s, dob=%s, employment_type=%s,'
                            ' education=%s, work_shift=%s, address=%s, contact=%s, doj=%s, user_type=%s, salary=%s, '

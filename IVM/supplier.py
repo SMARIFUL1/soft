@@ -132,11 +132,13 @@ def add_supplier(invoice, name, contact, description, treeview):
             return
         try:
             cursor.execute('use inventory_system')
-            cursor.execute('SELECT * FROM supplier_data WHERE invoice=%s',invoice)
+            cursor.execute('CREATE TABLE IF NOT EXISTS supplier_data (invoice INT PRIMARY KEY, name VARCHAR(100), contact VARCHAR(40), description TEXT)')
+
+            cursor.execute('SELECT * FROM supplier_data WHERE invoice=%s', invoice)
             if cursor.fetchone():
                 messagebox.showinfo('Error', 'Invoice already exists')
                 return
-            cursor.execute('CREATE TABLE IF NOT EXISTS supplier_data (invoice INT PRIMARY KEY, name VARCHAR(100), contact VARCHAR(40), description TEXT)')
+
             cursor.execute('INSERT INTO supplier_data VALUES(%s,%s,%s,%s)', (invoice, name, contact, description))
             connection.commit()
             messagebox.showinfo('Success', 'Data added successfully')
