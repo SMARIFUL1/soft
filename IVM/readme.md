@@ -1,1 +1,1 @@
-A software for inventory management system where tracking employees information , suppliers info and so on. Would like to visualize the employees working system based on customers order. I used python tkinter and MYSQL as they has lots of readymade sys which helps to bulid things easily.
+A software for inventory management system where tracking employees information , suppliers info and so on. Would like to visualize the employees working system based on customers order. I used python tkinter and MYSQL as they have lots of readymade sys which help to bulid things easily.
