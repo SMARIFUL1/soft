@@ -4,6 +4,69 @@ from employees import connect_database
 
 
 
+def show_all(treeview, search_combobox,search_entry):
+    treeview_data(treeview)
+    search_combobox.set('Search By')
+    search_entry.delete(0, END)
+
+def search_product(search_combobox,search_entry, treeview):
+    if search_combobox.get() == "Search By":
+        messagebox.showwarning('Warning','Please select an option')
+    elif search_entry.get()=='':
+        messagebox.showwarning('Warning','Please enter value to search')
+    else:
+        cursor, connection = connect_database()
+        if not cursor or not connection:
+            return
+        cursor.execute('use inventory_system')
+        cursor.execute(f'SELECT * FROM product_data WHERE {search_combobox.get()}=%s',search_entry.get())
+        records = cursor.fetchall()
+        if len(records) == 0:
+            messagebox.showerror('Error','No records found')
+            return
+        treeview.delete(*treeview.get_children())
+        for record in records:
+            treeview.insert('', END, values=record)
+
+
+
+
+def select_data(event, treeview,category_combobox,supplier_combobox,name_entry,price_entry,quantity_entry,status_combobox):
+    index=treeview.selection()
+    dict = treeview.item(index)
+    content=dict['values']
+
+    category_combobox.delete(0,END)
+    supplier_combobox.delete(0,END)
+    name_entry.delete(0,END)
+    price_entry.delete(0,END)
+    quantity_entry.delete(0,END)
+    status_combobox.delete(0,END)
+
+    category_combobox.set(content[1])
+    supplier_combobox.set(content[2])
+    name_entry.insert(0, content[3])
+    price_entry.insert(0, content[4])
+    quantity_entry.insert(0, content[5])
+    status_combobox.set(content[6])
+
+
+def treeview_data(treeview):
+    cursor, connection = connect_database()
+    if not cursor or not connection:
+        return
+    try:
+        cursor.execute('use inventory_system')
+        cursor.execute('select * from product_data')
+        records = cursor.fetchall()
+        treeview.delete(*treeview.get_children())  #deleting old data at first
+        for record in records:
+            treeview.insert('', END, values=record)
+    except Exception as e:
+        messagebox.showinfo('Error', e)
+    finally:
+        cursor.close()
+        connection.close()
 
 def fetch_supplier_category(category_combobox, supplier_combobox):
     category_option=[]
@@ -11,8 +74,8 @@ def fetch_supplier_category(category_combobox, supplier_combobox):
     cursor, connection = connect_database()
     if not cursor or not connection:
         return
-    cursor.execute('use inventory_system')
-    cursor.execute('select name from category_data')
+    cursor.execute('USE inventory_system')
+    cursor.execute('SELECT name FROM category_data')
     names = cursor.fetchall()
     if len(names) >0:
         category_combobox.set('Select')
@@ -20,7 +83,7 @@ def fetch_supplier_category(category_combobox, supplier_combobox):
             category_option.append(name[0])
         category_combobox.config(values=category_option)
 
-    cursor.execute('select name from supplier_data')
+    cursor.execute('SELECT name FROM supplier_data')
     names = cursor.fetchall()
     if len(names) >0:
         supplier_combobox.set('Select')
@@ -28,21 +91,107 @@ def fetch_supplier_category(category_combobox, supplier_combobox):
             supplier_option.append(name[0])
         supplier_combobox.config(values=supplier_option)
 
-def add_product(category, supplier, name, price, quantity, status):
+def add_product(category, supplier, name, price, quantity, status,treeview):
     if category == 'Empty':
         messagebox.showerror('Error', 'Please enter a valid category.')
     elif supplier=='Empty':
         messagebox.showerror('Error', 'Please enter a valid supplier.')
-    elif category=='Select' or supplier=='Select' or name=='' or price=='' or quantity=='' or status=='Select status':
+    elif category=='Select' or supplier=='Select' or name=='' or price=='' or quantity=='' or status=='Select Status':
         messagebox.showerror('Error', 'All fields are required.')
     else:
         cursor, connection = connect_database()
         if not cursor or not connection:
             return
-        cursor.execute('use inventory_system')
-        cursor.execute('CREATE TABLE IF NOT EXISTS product_data(id INT AUTO_INCREMENT PRIMARY KEY, category VARCHAR(100),'
-                       'supplier VARCHAR(100), name VARCHAR(100),price DECIMAL(10,2),quantity INT,status VARCHAR(50)')
+        cursor.execute('USE inventory_system')
+        cursor.execute('CREATE TABLE IF NOT EXISTS product_data (id INT AUTO_INCREMENT PRIMARY KEY, category VARCHAR(100),'
+                       'supplier VARCHAR(100), name VARCHAR(100),price DECIMAL(10,2),quantity INT,status VARCHAR(50))')
 
+        cursor.execute('SELECT * FROM product_data WHERE category=%s AND supplier=%s AND name=%s',(category,supplier, name))
+        existing_product = cursor.fetchone()
+        if existing_product:
+            messagebox.showerror('Error', 'Product already exists.')
+            return
+
+        cursor.execute('INSERT INTO product_data (category, supplier, name, price, quantity, status) VALUES(%s,%s,%s,%s,%s,%s)',
+                       (category, supplier, name, price, quantity, status))
+        connection.commit()
+        messagebox.showinfo('Success', 'Data added successfully.')
+        treeview_data(treeview)
+
+
+def update_product(category, supplier, name, price, quantity, status,treeview):
+    index=treeview.selection()
+    if not index:
+        messagebox.showerror('Error', 'Please select a row.')
+        return
+    dict=treeview.item(index)
+    content=dict['values']
+    id = content[0]
+    cursor, connection = connect_database()
+    if not cursor or not connection:
+        return
+    try:
+        cursor.execute('USE inventory_system')
+        cursor.execute('SELECT * FROM product_data WHERE id=%s',id)
+        current_data=cursor.fetchone()
+        current_data=current_data[1:]
+        current_data=list(current_data)
+        current_data[3]=str(current_data[3])
+        current_data=tuple(current_data)
+
+        quantity=int(quantity)
+        new_data=(category,supplier,name,price,quantity,status,current_data)
+
+        if current_data==new_data:
+            messagebox.showerror('Error', 'No changes detected.')
+            return
+        cursor.execute('UPDATE product_data SET category=%s, supplier=%s, name=%s,price=%s,quantity=%s,status=%s WHERE id=%s',
+                       (category,supplier,name,price,quantity,status,id))
+        connection.commit()
+        messagebox.showinfo('Success', 'Data updated successfully.')
+        treeview_data(treeview)
+
+    except Exception as e:
+        messagebox.showerror('Error', str(e))
+    finally:
+        cursor.close()
+        connection.close()
+
+def clear_fields(category_combobox,supplier_combobox,name_entry,price_entry,quantity_entry,status_combobox, treeview):
+        category_combobox.set('Select')
+        supplier_combobox.set('Select')
+        name_entry.delete(0,END)
+        price_entry.delete(0,END)
+        quantity_entry.delete(0,END)
+        status_combobox.set('Select Status')
+        treeview.selection_remove(treeview.selection())
+
+def delete_product(treeview,category_combobox,supplier_combobox,name_entry,price_entry,quantity_entry,status_combobox):
+    index = treeview.selection()
+    dict = treeview.item(index)
+    content = dict['values']
+    id = content[0]
+    if not index:
+        messagebox.showerror('Error', 'No selected row')
+        return
+    else:
+        response=messagebox.askyesno('Confirm', 'Do you want to delete this record?')
+        if response:
+            cursor, connection = connect_database()
+            if not cursor or not connection:
+                return
+            try:
+                cursor.execute('use inventory_system')
+                cursor.execute('DELETE FROM product_data WHERE id=%s',id)
+                connection.commit()
+                treeview_data(treeview)
+                messagebox.showinfo('Info','Record is deleted')
+                clear_fields(category_combobox,supplier_combobox,name_entry,price_entry,quantity_entry,status_combobox,treeview)
+            except Exception as e:
+                messagebox.showerror('Error', e)
+            finally:
+                cursor.close()
+                connection.close()
 
 def product_form(window):
     product_frame = Frame(window, width=1100, height=600, bg='white')
@@ -103,19 +252,23 @@ def product_form(window):
     add_button = Button(button_frame, text="Add", font=("Times new roman", 12), width=8, cursor='hand2', fg='white',
                          bg='#0f4d7d', command=lambda :add_product(category_combobox.get(),supplier_combobox.get(),
                                                                    name_entry.get(),price_entry.get(),quantity_entry.get(),
-                                                                   status_combobox.get()),)
+                                                                   status_combobox.get(), treeview),)
     add_button.grid(row=0, column=0, padx=10)
 
     update_button = Button(button_frame, text="Update", font=("Times new roman", 12), width=8, cursor='hand2', fg='white',
-                           bg='#0f4d7d',)
+                           bg='#0f4d7d', command=lambda:update_product(category_combobox.get(),supplier_combobox.get(),
+                                                                   name_entry.get(),price_entry.get(),quantity_entry.get(),
+                                                                   status_combobox.get(), treeview))
     update_button.grid(row=0, column=1, padx=10)
 
     clear_button = Button(button_frame, text="Clear", font=("Times new roman", 12), width=8, cursor='hand2', fg='white',
-                          bg='#0f4d7d',)
+                          bg='#0f4d7d', command=lambda :clear_fields(category_combobox,supplier_combobox,name_entry,
+                                                                     price_entry,quantity_entry,status_combobox,treeview))
     clear_button.grid(row=0, column=2, padx=10)
 
     delete_button = Button(button_frame, text="Delete", font=("Times new roman", 12), width=8, cursor='hand2',fg='white',
-                           bg='#0f4d7d',)
+                           bg='#0f4d7d',command=lambda :delete_product(treeview,category_combobox,supplier_combobox,
+                                                                       name_entry,price_entry,quantity_entry,status_combobox))
     delete_button.grid(row=0, column=3, padx=10)
 
     search_frame = LabelFrame(product_frame, text='Search Product', font=('times new roman', 14) ,bg='white')
@@ -129,11 +282,11 @@ def product_form(window):
     search_entry.grid(row=0, column=1, padx=10)
 
     search_button = Button(search_frame, text="Search", font=("Times new roman", 12), width=8, cursor='hand2', fg='white',
-                           bg='#0f4d7d',)
+                           bg='#0f4d7d',command=lambda :search_product(search_combobox,search_entry,treeview))
     search_button.grid(row=0, column=2, padx=10)
 
     show_button = Button(search_frame, text="Show All", font=("Times new roman", 12), width=8, cursor='hand2', fg='white',
-                          bg='#0f4d7d',)
+                          bg='#0f4d7d', command=lambda :show_all(treeview,search_combobox,search_entry))
     show_button.grid(row=0, column=3, padx=10)
 
     treeview_frame = Frame(product_frame, bg='white')
@@ -142,7 +295,7 @@ def product_form(window):
     horizontal_scrollbar = Scrollbar(treeview_frame, orient=HORIZONTAL)
     vertical_scrollbar = Scrollbar(treeview_frame, orient=VERTICAL)
 
-    treeview = ttk.Treeview(treeview_frame, columns=('category', 'supplier', 'name','price','quantity','status'), show='headings',
+    treeview = ttk.Treeview(treeview_frame, columns=('id','category', 'supplier', 'name','price','quantity','status'), show='headings',
                             yscrollcommand=vertical_scrollbar.set, xscrollcommand=horizontal_scrollbar.set)
     horizontal_scrollbar.pack(side=BOTTOM, fill=X)
     vertical_scrollbar.pack(side=RIGHT, fill=Y)
@@ -151,11 +304,15 @@ def product_form(window):
 
     treeview.pack(fill=BOTH, expand=1)
 
+    treeview.heading('id', text='ID')
     treeview.heading('category', text='Category')
-    treeview.heading('supplier', text='Sipplier')
-    treeview.heading('name', text='Name')
+    treeview.heading('supplier', text='Supplier')
+    treeview.heading('name', text='Product Name')
     treeview.heading('price', text='Price')
     treeview.heading('quantity', text='Quantity')
     treeview.heading('status', text='Status')
 
     fetch_supplier_category(category_combobox, supplier_combobox)
+    treeview_data(treeview)
+    treeview.bind('<ButtonRelease-1>',lambda event:select_data(event, treeview,category_combobox,supplier_combobox,
+                                                               name_entry,price_entry,quantity_entry,status_combobox,))
