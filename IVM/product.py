@@ -3,7 +3,6 @@ from tkinter import ttk, messagebox
 from employees import connect_database
 
 
-
 def show_all(treeview, search_combobox,search_entry):
     treeview_data(treeview)
     search_combobox.set('Search By')
@@ -28,14 +27,10 @@ def search_product(search_combobox,search_entry, treeview):
         for record in records:
             treeview.insert('', END, values=record)
 
-
-
-
 def select_data(event, treeview,category_combobox,supplier_combobox,name_entry,price_entry,quantity_entry,status_combobox):
     index=treeview.selection()
     dict = treeview.item(index)
     content=dict['values']
-
     category_combobox.delete(0,END)
     supplier_combobox.delete(0,END)
     name_entry.delete(0,END)
@@ -49,7 +44,6 @@ def select_data(event, treeview,category_combobox,supplier_combobox,name_entry,p
     price_entry.insert(0, content[4])
     quantity_entry.insert(0, content[5])
     status_combobox.set(content[6])
-
 
 def treeview_data(treeview):
     cursor, connection = connect_database()
@@ -117,7 +111,6 @@ def add_product(category, supplier, name, price, quantity, status,treeview):
         connection.commit()
         messagebox.showinfo('Success', 'Data added successfully.')
         treeview_data(treeview)
-
 
 def update_product(category, supplier, name, price, quantity, status,treeview):
     index=treeview.selection()
@@ -254,23 +247,19 @@ def product_form(window):
                                                                    name_entry.get(),price_entry.get(),quantity_entry.get(),
                                                                    status_combobox.get(), treeview),)
     add_button.grid(row=0, column=0, padx=10)
-
     update_button = Button(button_frame, text="Update", font=("Times new roman", 12), width=8, cursor='hand2', fg='white',
                            bg='#0f4d7d', command=lambda:update_product(category_combobox.get(),supplier_combobox.get(),
                                                                    name_entry.get(),price_entry.get(),quantity_entry.get(),
                                                                    status_combobox.get(), treeview))
     update_button.grid(row=0, column=1, padx=10)
-
     clear_button = Button(button_frame, text="Clear", font=("Times new roman", 12), width=8, cursor='hand2', fg='white',
                           bg='#0f4d7d', command=lambda :clear_fields(category_combobox,supplier_combobox,name_entry,
                                                                      price_entry,quantity_entry,status_combobox,treeview))
     clear_button.grid(row=0, column=2, padx=10)
-
     delete_button = Button(button_frame, text="Delete", font=("Times new roman", 12), width=8, cursor='hand2',fg='white',
                            bg='#0f4d7d',command=lambda :delete_product(treeview,category_combobox,supplier_combobox,
                                                                        name_entry,price_entry,quantity_entry,status_combobox))
     delete_button.grid(row=0, column=3, padx=10)
-
     search_frame = LabelFrame(product_frame, text='Search Product', font=('times new roman', 14) ,bg='white')
     search_frame.place(x=450, y=50)
     search_combobox = ttk.Combobox(search_frame, values=('Category','Supplier','Name','Price','Status'),
