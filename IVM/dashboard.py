@@ -1,8 +1,38 @@
 from tkinter import *
+from tkinter import messagebox
+
 from employees import employee_form
 from supplier import supplier_form
 from category import category_form
+from product import product_form
+from employees import connect_database
 
+
+def tax_window():
+    def save_tax():
+        value=tax_count.get()
+        cursor, connection = connect_database()
+        if not cursor or not connection:
+            return
+        cursor.execute('use inventory_system')
+        cursor.execute('CREATE TABLE IF NOT EXISTS tax_table (id INT PRIMARY KEY, tax DECIMAL(5,2))')
+        cursor.execute('SELECT id from tax_table WHERE id=1 ')
+        if cursor.fetchone():
+            cursor.execute('UPDATE tax_table SET tax=%s WHERE id=1',value)
+        else:
+            cursor.execute('INSERT INTO tax_table (id, tax) VALUES (1,%s)',value)
+        connection.commit()
+        messagebox.showinfo('Success', f'Tax is set to {value}%', parent=tax_root)
+    tax_root=Toplevel()
+    tax_root.title("Tax Window")
+    tax_root.geometry("300x150")
+    tax_root.grab_set()
+    tax_percentage=Label(tax_root,text="Enter Tax Percentage(%)", font=("Arial",15))
+    tax_percentage.pack(pady=10)
+    tax_count=Spinbox(tax_root,from_=0,to=100,font=("Arial",15))
+    tax_count.pack()
+    save_button = Button(tax_root,text="Save",command=save_tax, font=("Arial",15, 'bold'),bg="lightblue",fg="black")
+    save_button.pack(pady=20)
 
 #GUI part
 window = Tk()
@@ -62,7 +92,8 @@ category_btn.pack(fill=X)
 ## product_button
 prod_icon = PhotoImage(file='product.png', height=40, width=40, )
 product_btn = Button(leftframe, image=supp_icon, compound=LEFT,
-                     text=' Products', font=('times new roman', 20, 'bold'), fg='black', anchor=W, padx=5)
+                     text=' Products', font=('times new roman', 20, 'bold'), fg='black', anchor=W, padx=5,
+                     command=lambda :product_form(window))
 product_btn.pack(fill=X)
 
 ## sales_button
@@ -70,6 +101,12 @@ sale_icon = PhotoImage(file='sales.png', height=40, width=40, )
 sales_btn = Button(leftframe, image=sale_icon, compound=LEFT,
                    text=' Sales', font=('times new roman', 20, 'bold'), fg='black', anchor=W, padx=5)
 sales_btn.pack(fill=X)
+
+## tax_button
+tax_icon = PhotoImage(file='', height=40, width=40, )
+tax_btn = Button(leftframe, image=tax_icon, compound=LEFT, text=' Tax', font=('times new roman', 20, 'bold'), fg='black',
+                 anchor=W, padx=5, command=tax_window)
+tax_btn.pack(fill=X)
 
 ## exit_button
 exit_icon = PhotoImage(file='employee.png', height=40, width=40, )
