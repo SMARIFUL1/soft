@@ -1,12 +1,38 @@
 from tkinter import *
 from tkinter import messagebox
-
 from employees import employee_form
 from supplier import supplier_form
 from category import category_form
 from product import product_form
 from employees import connect_database
+import time
 
+
+def update_time():
+    cursor, connection = connect_database()
+    if not cursor or not connection:
+        return
+    cursor.execute('USE inventory_system')
+    cursor.execute('SELECT * FROM employee_data')
+    emp_records = cursor.fetchall()
+    emp_count_label.config(text=len(emp_records))
+
+    cursor.execute('SELECT * FROM supplier_data')
+    supp_records = cursor.fetchall()
+    supp_count_label.config(text=len(supp_records))
+
+    cursor.execute('SELECT * FROM category_data')
+    cat_records = cursor.fetchall()
+    cats_count_label.config(text=len(cat_records))
+
+    cursor.execute('SELECT * FROM product_data')
+    prod_records = cursor.fetchall()
+    prods_count_label.config(text=len(prod_records))
+
+
+    current_date=time.strftime('%d/%m/%Y\t\t\t\t%H:%M:%S',time.localtime(time.time()))
+    subtitleLabel.config(text=f'Welcome Users\t\t\t {current_date}')
+    subtitleLabel.after(1000, update_time)
 
 def tax_window():
     def save_tax():
@@ -54,7 +80,7 @@ titleLabel.place(x=0, y=0, relwidth=1)
 logout_btn = Button(window, text='Logout', font=('times new roman', 20, 'bold'), fg='black')
 logout_btn.place(x=1100, y=10)
 
-subtitleLabel = Label(window, text='Welcome Users\t\t Date:1.12.2024\t\t Time:12:12:59 pm',
+subtitleLabel = Label(window, text='Welcome Users\t\t Date:1.12.2024\t\t Time:12:12:59',
                       font=('times new roman', 15), bg='gray', fg='white', )
 subtitleLabel.place(x=0, y=70, relwidth=1)
 
@@ -179,4 +205,5 @@ prods_label.pack()
 prods_count_label = Label(prods_frame, text='0', font=('times new roman', 25, 'bold'), fg='black', bg='#87CEFA')
 prods_count_label.pack()
 
+update_time()
 window.mainloop()
