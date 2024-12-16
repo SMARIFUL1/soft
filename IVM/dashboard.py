@@ -4,6 +4,7 @@ from employees import employee_form
 from supplier import supplier_form
 from category import category_form
 from product import product_form
+from viz import sales_form
 from employees import connect_database
 import time
 
@@ -125,7 +126,8 @@ product_btn.pack(fill=X)
 ## sales_button
 sale_icon = PhotoImage(file='sales.png', height=40, width=40, )
 sales_btn = Button(leftframe, image=sale_icon, compound=LEFT,
-                   text=' Sales', font=('times new roman', 20, 'bold'), fg='black', anchor=W, padx=5)
+                   text=' Sales', font=('times new roman', 20, 'bold'), fg='black', anchor=W, padx=5,
+                   command=lambda :sales_form(window))
 sales_btn.pack(fill=X)
 
 ## tax_button
